@@ -38,11 +38,31 @@ git push -u origin main
 
 推送前請確認：`git status` 乾淨，且 `git check-ignore -v .env` 顯示 `.env` 被忽略。
 
-### 可選：GitHub CLI 建倉並推送
+### 可選：GitHub CLI 建倉並推送（方式 B）
+
+1. 安裝並**登入**（需在瀏覽器完成授權，無法由他人代登）：
 
 ```bash
 winget install GitHub.cli
-gh auth login
+gh auth login -h github.com -p https -w
+```
+
+2. 在專案根目錄執行內建腳本（預設倉庫名 `translation_project`，公開）：
+
+```powershell
+.\scripts\github-gh-push.ps1
+```
+
+自訂名稱或私人倉庫：
+
+```powershell
+.\scripts\github-gh-push.ps1 -RepoName "my-translation-app"
+.\scripts\github-gh-push.ps1 -RepoName "my-app" -Visibility private
+```
+
+等同手動：
+
+```bash
 cd <專案根目錄>
 gh repo create <儲存庫名稱> --public --source=. --remote=origin --push
 ```
