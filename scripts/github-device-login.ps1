@@ -1,5 +1,5 @@
-# GitHub CLI device login helper: opens the device page in your default browser,
-# then runs gh auth login (you must paste the one-time code from the terminal).
+# GitHub CLI device login helper: opens the device page, then runs gh auth login.
+# If you see "scripts disabled", use instead: scripts\github-device-login.cmd
 # Usage: .\scripts\github-device-login.ps1
 
 $ErrorActionPreference = "Continue"

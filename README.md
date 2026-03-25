@@ -48,16 +48,37 @@ gh auth login -h github.com -p https -w
 ```
 
 **補充：瀏覽器沒自己跳出時**  
-`gh` 用的是「裝置登入」：終端機會顯示**一次性代碼**，你需要**手動**開啟 [https://github.com/login/device](https://github.com/login/device)，把代碼貼上後按授權（通常**不會**自動彈出視窗）。Windows 可改用腳本先幫你開分頁再登入：
+`gh` 用的是「裝置登入」：終端機會顯示**一次性代碼**，你需要**手動**開啟 [https://github.com/login/device](https://github.com/login/device)，把代碼貼上後按授權（通常**不會**自動彈出視窗）。Windows 可改用腳本先幫你開分頁再登入。**若出現「已停用指令碼執行」**，請用 `.cmd`（不依賴 PowerShell 執行原則）：
+
+```cmd
+scripts\github-device-login.cmd
+```
+
+或非指令碼、直接在專案根目錄：
 
 ```powershell
+gh auth login -h github.com -p https -w
+```
+
+（畫面上會出現 `First copy your one-time code: XXXX-XXXX`，請貼到已開啟的 [device 頁面](https://github.com/login/device)。）
+
+若堅持用 `.ps1`，請先允許本機腳本：**以系統管理員執行可省略**，一般使用者可用：
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 .\scripts\github-device-login.ps1
 ```
 
 2. 在專案根目錄執行內建腳本（預設倉庫名 `translation_project`，公開）：
 
+```cmd
+scripts\github-gh-push.cmd
+```
+
+或：
+
 ```powershell
-.\scripts\github-gh-push.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\github-gh-push.ps1
 ```
 
 自訂名稱或私人倉庫：
