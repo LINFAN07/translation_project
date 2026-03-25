@@ -47,6 +47,13 @@ winget install GitHub.cli
 gh auth login -h github.com -p https -w
 ```
 
+**補充：瀏覽器沒自己跳出時**  
+`gh` 用的是「裝置登入」：終端機會顯示**一次性代碼**，你需要**手動**開啟 [https://github.com/login/device](https://github.com/login/device)，把代碼貼上後按授權（通常**不會**自動彈出視窗）。Windows 可改用腳本先幫你開分頁再登入：
+
+```powershell
+.\scripts\github-device-login.ps1
+```
+
 2. 在專案根目錄執行內建腳本（預設倉庫名 `translation_project`，公開）：
 
 ```powershell
