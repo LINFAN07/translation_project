@@ -1,0 +1,139 @@
+:root {
+  font-family: "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif;
+  color: #1a1a1a;
+  background: #f4f5f7;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 1rem 1.25rem 2rem;
+  max-width: 56rem;
+  margin-inline: auto;
+}
+
+h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.privacy-banner {
+  background: #0d47a1;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.privacy-banner strong {
+  color: #ffecb3;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+label:first-of-type {
+  margin-top: 0;
+}
+
+input[type="password"],
+input[type="text"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font: inherit;
+}
+
+textarea {
+  min-height: 10rem;
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.row > div {
+  flex: 1 1 12rem;
+}
+
+button {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button.primary {
+  background: #1565c0;
+  color: #fff;
+}
+
+button.primary:disabled {
+  background: #90a4ae;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: #eceff1;
+  color: #263238;
+}
+
+.hint {
+  font-size: 0.82rem;
+  color: #546e7a;
+  margin: 0.25rem 0 0;
+}
+
+.log {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  background: #263238;
+  color: #eceff1;
+  padding: 0.75rem;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  max-height: 12rem;
+  overflow: auto;
+}
+
+.error {
+  color: #b71c1c;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.output textarea {
+  min-height: 14rem;
+}
+
+footer {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: #78909c;
+}

@@ -2,6 +2,26 @@
 
 此專案利用 **Gemini** 處理長文本翻譯，以術語表、分段重疊與滾動摘要維持一致性。
 
+## 純前端雲端版（多人用你的網址，金鑰不給站長）
+
+目錄 **`web/public/`** 為**純靜態**頁面：使用者的 **Gemini API 金鑰**只存在自家瀏覽器（`localStorage` 可選），翻譯請求由**瀏覽器直接呼叫 Google** `generativelanguage.googleapis.com`，**不經**專案擁有者的 Python／Worker，站長**無法**從後端讀取他人金鑰與原文。
+
+- 本機預覽：用本機靜態伺服器開啟（勿用 `file://`，否則常無法呼叫 API），例如：  
+  `npx --yes serve web/public -p 3330` → 開啟提示的 `http://localhost:3330`
+- **Cloudflare Pages** 部署：在 `web` 目錄執行（首次需登入 Cloudflare：`npx wrangler login`；專案名可自改）：
+
+```bash
+cd web
+npm install
+npx wrangler pages deploy public --project-name=translation-gemini-client
+```
+
+部署後請至 [Google AI Studio](https://aistudio.google.com/) 或 Cloud Console **憑證**，將 API 金鑰的「HTTP 參照網址」設為你的 Pages 網域，例如 **`https://translation-gemini-client.pages.dev/*`**（與實際專案名一致），否則瀏覽器可能被 CORS／金鑰限制擋下。
+
+本倉庫已建立的 Pages 專案預設網址：**https://translation-gemini-client.pages.dev**（每次 `wrangler pages deploy` 可能另產生預覽子網域，正式網域以前者為準）。
+
+> 信任說明：使用者仍信任「你提供的靜態 `app.js`」未被竄改；若需最高保證請自行 clone 建置並自行部署，或比對 Git 內容。
+
 ## 環境與依賴
 
 1. Python 3.10+ 建議。
@@ -190,6 +210,7 @@ streamlit run app.py
 - `src/gemini_helpers.py`：金鑰設定、重試、回應擷取（可改走 Worker）。
 - `src/gemini_worker_client.py`：呼叫 Cloudflare Worker 代理。
 - `cloudflare/gemini-proxy/`：Worker 原始碼（Gemini 金鑰僅在 Cloudflare Secrets）。
+- `web/public/`：純前端翻譯頁（金鑰僅在瀏覽器，直連 Google）。
 - `src/main.py`：CLI 入口。
 - `src/app.py`：Streamlit 入口。
 

@@ -1,0 +1,11 @@
+{
+  "name": "translation-web-client",
+  "private": true,
+  "description": "Static SPA: Gemini calls from browser only (keys in localStorage).",
+  "scripts": {
+    "deploy": "wrangler pages deploy public --project-name=translation-gemini-client"
+  },
+  "devDependencies": {
+    "wrangler": "^3.99.0"
+  }
+}

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI 繁體中文翻譯（瀏覽器端金鑰）</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <h1>AI 繁體中文翻譯助手（純前端）</h1>
+
+    <div class="privacy-banner">
+      <strong>隱私說明：</strong>Gemini API 金鑰只保存在<strong>您這台裝置的瀏覽器</strong>（可勾選「記住金鑰」寫入
+      localStorage），翻譯請求<strong>直接從您的瀏覽器</strong>送往 Google，<strong>不會</strong>經過本網站擁有者的伺服器，站長也<strong>無法</strong>看見您的金鑰與原文。請自行保管裝置安全，並至 Google AI Studio／Cloud 為金鑰設定「HTTP 參照位址」限制為本網站網域。
+    </div>
+
+    <div class="panel">
+      <label for="apiKey">Gemini API 金鑰（僅在您瀏覽器內使用）</label>
+      <input
+        id="apiKey"
+        type="password"
+        autocomplete="off"
+        placeholder="從 Google AI Studio 取得"
+      />
+      <p class="hint">
+        <label
+          ><input type="checkbox" id="rememberKey" checked /> 將金鑰存在此瀏覽器（localStorage）</label
+        >
+        <button type="button" class="secondary" id="clearKeyBtn">清除已存金鑰</button>
+      </p>
+
+      <div class="row">
+        <div>
+          <label for="model">模型</label>
+          <select id="model"></select>
+        </div>
+        <div>
+          <label for="chunkSize">每段字數上限</label>
+          <input id="chunkSize" type="number" value="2000" min="500" max="8000" step="100" />
+        </div>
+        <div>
+          <label for="overlapSize">段間重疊字數</label>
+          <input id="overlapSize" type="number" value="500" min="0" max="2000" step="50" />
+        </div>
+      </div>
+
+      <label for="file">上傳檔案（選用，.txt / .docx / .pdf）</label>
+      <input id="file" type="file" accept=".txt,.docx,.pdf,text/plain" />
+
+      <label for="paste">或貼上原文</label>
+      <textarea id="paste" placeholder="全文…"></textarea>
+
+      <p class="hint">
+        若瀏覽器封鎖跨網域請求（CORS），請到 Google Cloud Console → API 與服務 → 憑證 → 編輯 API 金鑰 →
+        應用程式限制選「HTTP 參照網址（網站）」，新增此頁面的來源，例如
+        <code id="originHint"></code>
+      </p>
+
+      <p>
+        <button type="button" class="primary" id="runBtn">開始翻譯</button>
+      </p>
+      <p id="error" class="error" role="alert"></p>
+    </div>
+
+    <div class="panel">
+      <strong>進度</strong>
+      <pre id="log" class="log"></pre>
+    </div>
+
+    <div class="panel output">
+        <label for="output">譯文</label>
+        <textarea id="output" readonly placeholder="完成後顯示於此"></textarea>
+        <p><button type="button" class="secondary" id="dlTxt">下載 .txt</button></p>
+    </div>
+
+    <footer>
+      靜態頁面：無後端存取您的金鑰。技術：Gemini REST · Mammoth · pdf.js
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      document.getElementById("originHint").textContent = location.origin + "/*";
+    </script>
+    <script src="./app.js"></script>
+  </body>
+</html>

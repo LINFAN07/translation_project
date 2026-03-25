@@ -48,6 +48,7 @@ output/
 
 # Cloudflare Worker (local)
 cloudflare/**/node_modules/
+web/node_modules/
 cloudflare/**/.wrangler/
 cloudflare/**/dist/
 *.tsbuildinfo
