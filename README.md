@@ -17,20 +17,45 @@ pip install -r requirements.txt
 
 ## GitHub 版本管理
 
-在專案根目錄（確認 `.env` 未被追蹤）：
+### 本專案目前狀態（從中斷處接續）
+
+若本機**已**完成 `git init` 與首次 `commit`（例如已在 `main` 分支），只需連上遠端並推送：
+
+1. 到 GitHub 建立**空**儲存庫（不要勾選加入 README）。
+2. 在專案根目錄執行（將 URL 改成你的倉庫）：
+
+```bash
+git remote add origin https://github.com/<你的帳號>/<儲存庫名稱>.git
+git push -u origin main
+```
+
+若已存在 `origin`，可改用：
+
+```bash
+git remote set-url origin https://github.com/<你的帳號>/<儲存庫名稱>.git
+git push -u origin main
+```
+
+推送前請確認：`git status` 乾淨，且 `git check-ignore -v .env` 顯示 `.env` 被忽略。
+
+### 可選：GitHub CLI 建倉並推送
+
+```bash
+winget install GitHub.cli
+gh auth login
+cd <專案根目錄>
+gh repo create <儲存庫名稱> --public --source=. --remote=origin --push
+```
+
+### 从零建立 Git 時
 
 ```bash
 git init
 git add .
 git status   # 不應出現 .env
-git commit -m "Initial commit: translation pipeline and Cloudflare proxy"
-```
-
-至 GitHub 建立空儲存庫後：
-
-```bash
-git remote add origin https://github.com/<你的帳號>/<儲存庫名稱>.git
+git commit -m "Initial commit"
 git branch -M main
+git remote add origin https://github.com/<你的帳號>/<儲存庫名稱>.git
 git push -u origin main
 ```
 
