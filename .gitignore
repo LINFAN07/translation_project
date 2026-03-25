@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+.gemini_worker_auth.local.txt
 
 # Python
 __pycache__/

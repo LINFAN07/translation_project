@@ -109,26 +109,44 @@ git push -u origin main
 
 ## Cloudflare Worker（後端代理、隱藏 Gemini 金鑰）
 
-**Cloudflare Workers** 可架設輕量後端；**Google API 金鑰只存在 Worker 的 Secrets**，不會進前端或 Git。Streamlit 網頁無法直接託管在 Workers 上，請將 **Streamlit** 放在 [Streamlit Community Cloud](https://streamlit.io/cloud)、Render、自有主機等，並在該環境設定 `GEMINI_WORKER_URL`（及選用的 `GEMINI_WORKER_AUTH`）。
+**Cloudflare Workers** 可架設輕量後端；**Google API 金鑰只存在 Worker 的 Secrets**，不會進前端或 Git。Streamlit 無法跑在 Workers 裡，請把 **Streamlit** 仍放在 [Streamlit Cloud](https://streamlit.io/cloud)／Render／本機，只把 **Gemini 呼叫**改走 Worker。
 
-部署 Worker：
+### 本機已部署的 Worker（範例）
+
+目前專案中已透過 Wrangler 部署一個 Worker（名稱 `translation-gemini-proxy`）。你的網址形如：
+
+`https://translation-gemini-proxy.<你的子網域>.workers.dev`
+
+請到 [Cloudflare Dashboard → Workers](https://dash.cloudflare.com/) 確認實際網址，並在 `.env` 或 `.streamlit/secrets.toml` 設定（**不要** commit）：
+
+- `GEMINI_WORKER_URL`＝上述 Worker 根網址（**無結尾斜線**）
+- `GEMINI_WORKER_AUTH`＝與 Worker Secret **`WORKER_AUTH_SECRET`** 相同的字串（請自行保管；若忘記，可在 `cloudflare/gemini-proxy` 目錄重新執行 `npx wrangler secret put WORKER_AUTH_SECRET` 設定新值並同步更新客戶端）
+
+### 將 Google 金鑰寫入 Cloudflare（勿提交到 Git）
+
+1. 在專案根目錄 `.env` 設定**真的** `GEMINI_API_KEY`（勿用佔位字）。
+2. 執行（會把金鑰上傳到 Cloudflare，**不會**印出金鑰）：
+
+```cmd
+scripts\cloudflare-put-gemini-key.cmd
+```
+
+或：`powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\cloudflare-put-gemini-key.ps1`
+
+### 重新部署或首次部署
 
 ```bash
 cd cloudflare/gemini-proxy
 npm install
 npx wrangler login
 npx wrangler secret put GEMINI_API_KEY
-# 選用（強烈建議）：與本機 / Streamlit secrets 的 GEMINI_WORKER_AUTH 設成同一長隨機字串
 npx wrangler secret put WORKER_AUTH_SECRET
 npx wrangler deploy
 ```
 
-部署完成後記下 Worker URL（例如 `https://translation-gemini-proxy.<子網域>.workers.dev`），在執行翻譯的環境設定：
+（本專案 Worker **已啟用** `WORKER_AUTH_SECRET` 時，未帶 `Authorization: Bearer <密碼>` 的請求會收到 `401`，可避免 Worker URL 遭他人濫用。）
 
-- `GEMINI_WORKER_URL`：上述 URL（**不要**結尾斜線）
-- `GEMINI_WORKER_AUTH`：若 Worker 已設定 `WORKER_AUTH_SECRET`，此處填**相同值**（Streamlit 請寫在 `.streamlit/secrets.toml` 或主機環境變數，勿寫進程式碼）
-
-設定後，Python 會自動經 Worker 呼叫 Gemini，**不需**再設定 `GEMINI_API_KEY`（本機除錯仍可只用金鑰：unset `GEMINI_WORKER_URL` 即可）。
+設定完成後，Python 若偵測到 `GEMINI_WORKER_URL` 會**優先經 Worker**呼叫 Gemini，瀏覽器與 Git 皆**不需要**出現 Google API key。本機除錯若要改回直連，請暫時移除或清空 `GEMINI_WORKER_URL`。
 
 Worker 端點：`POST /generate`（body: `{"model","prompt"}`）、`POST /count-tokens`（body: `{"model","text"}`）。
 
