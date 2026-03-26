@@ -1,35 +1,11 @@
-# API 金鑰與本機環境
+# 本機環境（勿提交）
 .env
 .env.*
 !.env.example
 .gemini_worker_auth.local.txt
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# 虛擬環境
-.venv/
-venv/
-ENV/
+# Node（Wrangler / Pages）
+web/node_modules/
 
 # 工具與 IDE
 .idea/
@@ -37,18 +13,8 @@ ENV/
 *.swp
 *.swo
 
-# Streamlit
-.streamlit/secrets.toml
-
 # 本機輸入輸出（可依需求註解掉）
 input.txt
 output_translated.txt
 output/
 *.log
-
-# Cloudflare Worker (local)
-cloudflare/**/node_modules/
-web/node_modules/
-cloudflare/**/.wrangler/
-cloudflare/**/dist/
-*.tsbuildinfo
