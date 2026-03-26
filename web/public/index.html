@@ -4,81 +4,116 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI 多語言翻譯（瀏覽器端金鑰）</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <h1>AI 多語言翻譯助手（純前端）</h1>
+    <header class="app-header">
+      <h1 class="app-title">AI 多語言翻譯助手</h1>
+      <p class="app-tagline">純前端：金鑰僅存於您的瀏覽器，請求直連 API（需自行設定金鑰網域限制）。</p>
+    </header>
 
-    <div class="privacy-banner">
-      <strong>隱私說明：</strong>Gemini API 金鑰只保存在<strong>您這台裝置的瀏覽器</strong>（可勾選「記住金鑰」寫入
-      localStorage），翻譯請求<strong>直接從您的瀏覽器</strong>送往 Google，<strong>不會</strong>經過本網站擁有者的伺服器，站長也<strong>無法</strong>看見您的金鑰與原文。請自行保管裝置安全，並至 Google AI Studio／Cloud 為金鑰設定「HTTP 參照位址」限制為本網站網域。
-    </div>
+    <aside class="privacy-callout" aria-label="隱私與安全說明">
+      <strong>隱私說明：</strong>
+      API 金鑰可選擇保存在<strong>本機瀏覽器</strong>（localStorage）。翻譯請求由瀏覽器直接送往供應商，<strong>不經</strong>本站伺服器；站長無法取得您的金鑰或原文。請妥善保管裝置，並至 Google Cloud／AI
+      Studio 為金鑰設定「HTTP 參照網址」。
+    </aside>
 
-    <div class="panel">
-      <label for="apiKey">Gemini API 金鑰（僅在您瀏覽器內使用）</label>
-      <input
-        id="apiKey"
-        type="password"
-        autocomplete="off"
-        placeholder="從 Google AI Studio 取得"
-      />
-      <p class="hint">
-        <label
-          ><input type="checkbox" id="rememberKey" checked /> 將金鑰存在此瀏覽器（localStorage）</label
-        >
-        <button type="button" class="secondary" id="clearKeyBtn">清除已存金鑰</button>
-      </p>
+    <main class="app-main">
+      <section class="panel panel--form" aria-labelledby="section-config">
+        <h2 id="section-config" class="section-title">翻譯設定</h2>
 
-      <div class="row">
-        <div>
-          <label for="targetLang">譯文目標語言</label>
-          <select id="targetLang"></select>
+        <label for="apiKey">Gemini API 金鑰</label>
+        <input
+          id="apiKey"
+          type="password"
+          autocomplete="off"
+          placeholder="從 Google AI Studio 取得"
+          class="input-control"
+        />
+        <p class="hint hint-row">
+          <label
+            ><input type="checkbox" id="rememberKey" checked /> 將金鑰存在此瀏覽器（localStorage）</label
+          >
+          <button type="button" class="secondary" id="clearKeyBtn">清除已存金鑰</button>
+        </p>
+
+        <div class="row">
+          <div class="field">
+            <label for="targetLang">譯文目標語言</label>
+            <select id="targetLang" class="input-control"></select>
+          </div>
+          <div class="field">
+            <label for="model">模型</label>
+            <select id="model" class="input-control"></select>
+          </div>
+          <div class="field">
+            <label for="chunkSize">每段字數上限</label>
+            <input
+              id="chunkSize"
+              class="input-control"
+              type="number"
+              value="2000"
+              min="500"
+              max="8000"
+              step="100"
+            />
+          </div>
+          <div class="field">
+            <label for="overlapSize">段間重疊字數</label>
+            <input
+              id="overlapSize"
+              class="input-control"
+              type="number"
+              value="500"
+              min="0"
+              max="2000"
+              step="50"
+            />
+          </div>
         </div>
-        <div>
-          <label for="model">模型</label>
-          <select id="model"></select>
-        </div>
-        <div>
-          <label for="chunkSize">每段字數上限</label>
-          <input id="chunkSize" type="number" value="2000" min="500" max="8000" step="100" />
-        </div>
-        <div>
-          <label for="overlapSize">段間重疊字數</label>
-          <input id="overlapSize" type="number" value="500" min="0" max="2000" step="50" />
-        </div>
-      </div>
 
-      <label for="file">上傳檔案（選用，.txt / .docx / .pdf）</label>
-      <input id="file" type="file" accept=".txt,.docx,.pdf,text/plain" />
+        <label for="file">上傳檔案（選用）</label>
+        <input id="file" class="input-file" type="file" accept=".txt,.docx,.pdf,text/plain" />
+        <p class="hint">支援 .txt、.docx、.pdf</p>
 
-      <label for="paste">或貼上原文</label>
-      <textarea id="paste" placeholder="全文…"></textarea>
+        <label for="paste">或貼上原文</label>
+        <textarea id="paste" class="input-control textarea-input" placeholder="全文…"></textarea>
 
-      <p class="hint">
-        若瀏覽器封鎖跨網域請求（CORS），請到 Google Cloud Console → API 與服務 → 憑證 → 編輯 API 金鑰 →
-        應用程式限制選「HTTP 參照網址（網站）」，新增此頁面的來源，例如
-        <code id="originHint"></code>
-      </p>
+        <p class="hint">
+          若遇 CORS，請至 Google Cloud → 憑證 → 該 API 金鑰 → 應用程式限制「HTTP 參照網址」，新增
+          <code id="originHint"></code>
+        </p>
 
-      <p>
-        <button type="button" class="primary" id="runBtn">開始翻譯</button>
-      </p>
-      <p id="error" class="error" role="alert"></p>
-    </div>
+        <p class="actions">
+          <button type="button" class="primary" id="runBtn">開始翻譯</button>
+        </p>
+        <p id="error" class="error" role="alert"></p>
+      </section>
 
-    <div class="panel">
-      <strong>進度</strong>
-      <pre id="log" class="log"></pre>
-    </div>
+      <section class="panel" aria-labelledby="section-log">
+        <h2 id="section-log" class="section-title">進度</h2>
+        <pre id="log" class="log" aria-live="polite"></pre>
+      </section>
 
-    <div class="panel output">
-        <label for="output">譯文</label>
-        <textarea id="output" readonly placeholder="完成後顯示於此"></textarea>
-        <p><button type="button" class="secondary" id="dlTxt">下載 .txt</button></p>
-    </div>
+      <section class="panel panel--output" aria-labelledby="section-out">
+        <h2 id="section-out" class="section-title">譯文</h2>
+        <label class="visually-hidden" for="output">譯文輸出</label>
+        <textarea id="output" class="input-control textarea-output" readonly placeholder="完成後顯示於此"></textarea>
+        <p class="actions">
+          <button type="button" class="secondary" id="dlTxt">下載 .txt</button>
+        </p>
+      </section>
+    </main>
 
-    <footer>
-      靜態頁面：無後端存取您的金鑰。技術：Gemini REST · Mammoth · pdf.js
+    <footer class="app-footer">
+      靜態頁面 · 金鑰不經站方伺服器 · Gemini REST · Mammoth · pdf.js · 使用 Google Fonts（Noto Sans TC）需連線
+      fonts.googleapis.com
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>

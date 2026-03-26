@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -20,7 +21,10 @@ from gemini_token_estimate import (
     estimate_pipeline_tokens,
     usd_cost_estimate,
 )
-from target_languages import TARGET_LANGUAGE_OPTIONS
+from target_languages import (
+    TARGET_LANGUAGE_OPTIONS,
+    normalize_target_language,
+)
 
 load_dotenv()
 
@@ -28,50 +32,79 @@ _USE_GEMINI_WORKER = bool((os.getenv("GEMINI_WORKER_URL") or "").strip())
 
 st.set_page_config(
     page_title="AI 多語言翻譯助手",
-    page_icon="🌐",
+    page_icon=":material/translate:",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 zh_ui_css = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            .stDeployButton {display: none !important;}
-            div[data-testid="stFileUploader"] button[kind="secondary"] p {
-                font-size: 0 !important;
-            }
-            div[data-testid="stFileUploader"] button[kind="secondary"] p::after {
-                content: "瀏覽檔案";
-                font-size: 0.875rem !important;
-                font-weight: 600;
-            }
-            </style>
-            """
+<style>
+    :root {
+        --app-radius: 10px;
+        --app-block-pad: 1rem 0;
+    }
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stDeployButton {display: none !important;}
+    .block-container {
+        padding-top: 1.25rem;
+        padding-bottom: 2rem;
+        max-width: 1200px;
+    }
+    h1 {
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.35rem;
+    }
+    h2, h3 {
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+    [data-testid="stSidebar"] h2 {
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(26,35,50,0.55);
+        margin-top: 0.5rem;
+        margin-bottom: 0.35rem;
+    }
+    div[data-testid="stFileUploader"] button[kind="secondary"] p {
+        font-size: 0 !important;
+    }
+    div[data-testid="stFileUploader"] button[kind="secondary"] p::after {
+        content: "瀏覽檔案";
+        font-size: 0.875rem !important;
+        font-weight: 600;
+    }
+</style>
+"""
 st.markdown(zh_ui_css, unsafe_allow_html=True)
 
-st.title("🌐 AI 多語言翻譯助手")
-st.markdown(
-    """
-本工具使用 **Gemini**，可 **上傳** Word／Excel／PowerPoint／PDF／純文字，或直接 **貼上原文**。  
-請在側邊欄選擇 **目標語言**，會先提取 **術語表**，再分段翻譯並參考前文摘要。側邊欄亦可使用 **count_tokens** 估算 token 量。
-"""
-)
+with st.container(border=True):
+    st.title("AI 多語言翻譯助手")
+    st.caption(
+        "採用 Google Gemini：術語表、分段翻譯與前文摘要；側邊欄可估算 token。"
+    )
 
 if _USE_GEMINI_WORKER:
     st.success(
         "已啟用 **Cloudflare Worker** 代理：Google API 金鑰只存放在 Worker 後端，請勿在公開頁面貼金鑰。"
     )
 
-st.info(
-    "📎 **上傳方式：** 將檔案 **拖放** 到下方虛線框，或點 **「瀏覽檔案」**（介面若仍顯示 "
-    "*Browse files*，意義相同）。單檔上限約 **200MB**。"
-    "支援：PDF、Word（建議 .docx）、Excel（.xlsx／.xls）、PowerPoint（建議 .pptx）、.txt。"
-)
+st.markdown("上傳檔案或貼上原文後，點「開始翻譯」。")
+with st.expander("使用說明與支援格式", expanded=False):
+    st.markdown(
+        """
+- **上傳**：拖放到虛線框或點「瀏覽檔案」（介面若顯示 *Browse files* 意義相同）。單檔約 **200MB**。
+- **支援**：PDF、Word（建議 .docx）、Excel（.xlsx／.xls）、PowerPoint（建議 .pptx）、純文字 .txt。
+- **流程**：先建立術語表，再切段翻譯；可下載 .txt 或 .docx 譯文。
+"""
+    )
 
 # --- 側邊欄（上段）---
 with st.sidebar:
     st.header("設定")
+    st.subheader("API 與模型")
     if _USE_GEMINI_WORKER:
         st.caption(
             "翻譯與 token 估算經 **GEMINI_WORKER_URL**（與選用的 **GEMINI_WORKER_AUTH**）連線，不需填 Google 金鑰。"
@@ -94,6 +127,18 @@ with st.sidebar:
         format_func=lambda k: MODEL_OPTIONS[k],
         help="實際呼叫與 count_tokens 皆使用此模型 ID。若 404 請改選其他模型。",
     )
+
+    st.divider()
+    st.subheader("翻譯參數")
+    _tl_keys = list(TARGET_LANGUAGE_OPTIONS.keys())
+    _tl_ix = _tl_keys.index("zh-TW") if "zh-TW" in _tl_keys else 0
+    target_lang = st.selectbox(
+        "譯文目標語言",
+        options=_tl_keys,
+        index=_tl_ix,
+        format_func=lambda k: f"{TARGET_LANGUAGE_OPTIONS[k]}（{k}）",
+    )
+    target_lang = normalize_target_language(target_lang)
 
     chunk_size = st.slider("每段字數上限（切段）", 500, 5000, 2000, step=500)
     overlap_size = st.slider("段與段重疊字數", 100, 1000, 500, step=100)
@@ -179,10 +224,13 @@ with col1:
                     st.session_state.glossary,
                     prev_summary,
                     model_name=model_id,
+                    target_language=target_lang,
                 )
                 full_translation.append(translated_text)
                 prev_summary = generate_summary(
-                    translated_text, model_name=model_id
+                    translated_text,
+                    model_name=model_id,
+                    target_language=target_lang,
                 )
                 progress_bar.progress((i + 1) / num_chunks)
             except Exception as e:
@@ -248,11 +296,18 @@ if uploaded is not None:
 elif input_text.strip():
     derived_source = input_text.strip()
 
-est_sig = (model_id, chunk_size, overlap_size, len(derived_source), derived_source[:4096])
+est_sig = (
+    model_id,
+    target_lang,
+    chunk_size,
+    overlap_size,
+    len(derived_source),
+    derived_source[:4096],
+)
 
 with st.sidebar:
     st.divider()
-    st.subheader("Token 估算（官方）")
+    st.subheader("Token 估算")
     st.caption(
         "使用 `GenerativeModel.count_tokens`，會多次呼叫 Google API（僅計數、非生成）。"
         "輸出 token 以佔位字串估算，實際仍以帳單為準。"
@@ -284,16 +339,34 @@ with st.sidebar:
         ):
             eobj = st.session_state["token_est"]
             st.metric("切段數", eobj.num_chunks)
-            st.markdown(
-                f"| 項目 | Token（約） |\n|------|-------------|\n"
-                f"| 術語表（輸入） | {eobj.glossary_prompt_in:,} |\n"
-                f"| 術語表（輸出佔位） | {eobj.glossary_out_proxy:,} |\n"
-                f"| 翻譯步驟（輸入加總） | {eobj.translate_in_total:,} |\n"
-                f"| 摘要步驟（輸入加總） | {eobj.summary_in_total:,} |\n"
-                f"| 翻譯步驟（輸出佔位加總） | {eobj.translate_out_proxy_total:,} |\n"
-                f"| 摘要步驟（輸出佔位加總） | {eobj.summary_out_proxy_total:,} |\n"
-                f"| **輸入合計** | **{eobj.input_tokens_total:,}** |\n"
-                f"| **輸出合計（佔位）** | **{eobj.output_tokens_total:,}** |\n"
+            token_df = pd.DataFrame(
+                {
+                    "項目": [
+                        "術語表（輸入）",
+                        "術語表（輸出佔位）",
+                        "翻譯步驟（輸入加總）",
+                        "摘要步驟（輸入加總）",
+                        "翻譯步驟（輸出佔位加總）",
+                        "摘要步驟（輸出佔位加總）",
+                        "輸入合計",
+                        "輸出合計（佔位）",
+                    ],
+                    "Token（約）": [
+                        eobj.glossary_prompt_in,
+                        eobj.glossary_out_proxy,
+                        eobj.translate_in_total,
+                        eobj.summary_in_total,
+                        eobj.translate_out_proxy_total,
+                        eobj.summary_out_proxy_total,
+                        eobj.input_tokens_total,
+                        eobj.output_tokens_total,
+                    ],
+                }
+            )
+            st.dataframe(
+                token_df,
+                hide_index=True,
+                use_container_width=True,
             )
             usd = usd_cost_estimate(
                 model_id, eobj.input_tokens_total, eobj.output_tokens_total
