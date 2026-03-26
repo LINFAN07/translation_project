@@ -22,16 +22,18 @@ from prompt_builders import (
 from target_languages import get_target_config, normalize_target_language
 from text_splitter import split_text_with_overlap
 
-# 模型 ID 與顯示名稱（可依 Google 最新可用名稱調整）
+# 模型 ID 與顯示名稱（依 https://ai.google.dev/gemini-api/docs/models 更新；勿使用已對新用戶關閉的 2.0 系列）
 MODEL_OPTIONS: dict[str, str] = {
-    "gemini-2.0-flash": "Gemini 2.0 Flash",
+    "gemini-2.5-flash": "Gemini 2.5 Flash（建議）",
+    "gemini-2.5-pro": "Gemini 2.5 Pro",
     "gemini-1.5-flash": "Gemini 1.5 Flash",
     "gemini-1.5-pro": "Gemini 1.5 Pro",
 }
 
 # 參考：美元／每百萬 tokens（請定期對照 https://ai.google.dev/pricing 更新）
 USD_PER_1M_TOKENS: dict[str, dict[str, float]] = {
-    "gemini-2.0-flash": {"input": 0.10, "output": 0.40},
+    "gemini-2.5-flash": {"input": 0.15, "output": 0.60},
+    "gemini-2.5-pro": {"input": 1.25, "output": 10.00},
     "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
     "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
 }

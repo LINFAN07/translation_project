@@ -219,7 +219,7 @@ export default {
 
     try {
       const payload = (await request.json()) as Record<string, unknown>;
-      const model = String(payload.model || "gemini-1.5-flash").trim();
+      const model = String(payload.model || "gemini-2.5-flash").trim();
 
       if (url.pathname === "/generate" || url.pathname.endsWith("/generate")) {
         const prompt = String(payload.prompt ?? "");

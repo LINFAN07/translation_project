@@ -123,7 +123,7 @@ with st.sidebar:
     model_id = st.selectbox(
         "翻譯模型",
         options=list(MODEL_OPTIONS.keys()),
-        index=list(MODEL_OPTIONS.keys()).index("gemini-1.5-flash"),
+        index=list(MODEL_OPTIONS.keys()).index("gemini-2.5-flash"),
         format_func=lambda k: MODEL_OPTIONS[k],
         help="實際呼叫與 count_tokens 皆使用此模型 ID。若 404 請改選其他模型。",
     )

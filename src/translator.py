@@ -6,7 +6,7 @@ from target_languages import DEFAULT_TARGET_LANGUAGE
 
 load_dotenv()
 
-DEFAULT_GEMINI_MODEL = "gemini-1.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
 
 
 def translate_chunk(

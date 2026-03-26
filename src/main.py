@@ -50,8 +50,8 @@ def main() -> int:
     parser.add_argument(
         "--model",
         type=str,
-        default="gemini-1.5-flash",
-        help="Gemini 模型名稱 (預設: gemini-1.5-flash)",
+        default="gemini-2.5-flash",
+        help="Gemini 模型名稱 (預設: gemini-2.5-flash)",
     )
     parser.add_argument(
         "--target-lang",
