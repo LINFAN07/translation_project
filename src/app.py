@@ -20,13 +20,14 @@ from gemini_token_estimate import (
     estimate_pipeline_tokens,
     usd_cost_estimate,
 )
+from target_languages import TARGET_LANGUAGE_OPTIONS
 
 load_dotenv()
 
 _USE_GEMINI_WORKER = bool((os.getenv("GEMINI_WORKER_URL") or "").strip())
 
 st.set_page_config(
-    page_title="AI 繁體中文翻譯助手",
+    page_title="AI 多語言翻譯助手",
     page_icon="🌐",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -49,11 +50,11 @@ zh_ui_css = """
             """
 st.markdown(zh_ui_css, unsafe_allow_html=True)
 
-st.title("🌐 AI 繁體中文翻譯助手")
+st.title("🌐 AI 多語言翻譯助手")
 st.markdown(
     """
 本工具使用 **Gemini**，可 **上傳** Word／Excel／PowerPoint／PDF／純文字，或直接 **貼上原文**。  
-會先提取 **術語表**，再分段翻譯並參考前文摘要，維持長文脈絡。側邊欄可使用 **Google 官方 count_tokens** 事前估算 token 量。
+請在側邊欄選擇 **目標語言**，會先提取 **術語表**，再分段翻譯並參考前文摘要。側邊欄亦可使用 **count_tokens** 估算 token 量。
 """
 )
 
@@ -145,7 +146,11 @@ with col1:
 
         status_text.text("正在提取術語表…")
         try:
-            glossary_raw = extract_glossary(source_text, model_name=model_id)
+            glossary_raw = extract_glossary(
+                source_text,
+                model_name=model_id,
+                target_language=target_lang,
+            )
             st.session_state.glossary = parse_glossary_from_model(glossary_raw)
 
             st.success("術語表已建立。")
@@ -220,7 +225,7 @@ with col2:
             docx_bytes = build_translation_docx_bytes(
                 txt_data,
                 title="譯文",
-                subtitle="由 AI 繁體中文翻譯助手產生",
+                subtitle="由 AI 多語言翻譯助手產生",
             )
             st.download_button(
                 label="下載 Word（.docx）",
@@ -266,6 +271,7 @@ with st.sidebar:
                         chunk_size=chunk_size,
                         overlap_size=overlap_size,
                         api_key=api_key or None,
+                        target_language=target_lang,
                     )
                 st.session_state["token_est"] = est
                 st.session_state["token_est_sig"] = est_sig

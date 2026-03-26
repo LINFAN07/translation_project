@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI 繁體中文翻譯（瀏覽器端金鑰）</title>
+    <title>AI 多語言翻譯（瀏覽器端金鑰）</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <h1>AI 繁體中文翻譯助手（純前端）</h1>
+    <h1>AI 多語言翻譯助手（純前端）</h1>
 
     <div class="privacy-banner">
       <strong>隱私說明：</strong>Gemini API 金鑰只保存在<strong>您這台裝置的瀏覽器</strong>（可勾選「記住金鑰」寫入
@@ -30,6 +30,10 @@
       </p>
 
       <div class="row">
+        <div>
+          <label for="targetLang">譯文目標語言</label>
+          <select id="targetLang"></select>
+        </div>
         <div>
           <label for="model">模型</label>
           <select id="model"></select>

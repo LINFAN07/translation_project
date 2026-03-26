@@ -180,7 +180,7 @@ python src/main.py path\to\file.pdf -o output_translated.txt
 
 - 第一個參數為輸入檔（可為 `input.txt`、PDF、Word、Excel、PowerPoint 等）；若省略，預設 `input.txt`。
 - `-o`／`--output`：輸出路徑；副檔名 `.docx` 時輸出 Word。
-- `-c`／`--chunk_size`、`-v`／`--overlap`、`--model`、`--save-glossary`：見 `python src/main.py -h`。
+- `-c`／`--chunk_size`、`-v`／`--overlap`、`--model`、`--target-lang`（`zh-TW`／`ja`／`en`／`ko`）、`--save-glossary`：見 `python src/main.py -h`。
 
 若某段翻譯失敗，已完成的段落仍會寫入輸出檔，程式以**結束碼 1** 結束，並於主控台標示「部分譯文」。
 

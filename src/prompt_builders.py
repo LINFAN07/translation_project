@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import json
 
+from target_languages import get_target_config, normalize_target_language
+
 GLOSSARY_SOURCE_CHAR_LIMIT = 10000
 
 
@@ -33,11 +35,13 @@ def _glossary_to_prompt_string(glossary: object) -> str:
         return str(glossary)
 
 
-def build_extract_glossary_prompt(text: str) -> str:
+def build_extract_glossary_prompt(text: str, target_lang: str = "zh-TW") -> str:
+    tl = normalize_target_language(target_lang)
+    cfg = get_target_config(tl)
     snippet = _stratified_snippet(text, GLOSSARY_SOURCE_CHAR_LIMIT)
     return f"""
     你是一位專業的術語提取專家。請從以下文本中提取出 20-30 個關鍵術語（包含專有名詞、技術術語、高頻關鍵字）。
-    請為每個術語提供建議的繁體中文譯名。
+    {cfg["glossary_hint"]}
     
     輸出格式請嚴格遵守 JSON 格式：
     {{
@@ -53,11 +57,16 @@ def build_extract_glossary_prompt(text: str) -> str:
 
 
 def build_translate_prompt(
-    chunk: str, glossary: object, prev_summary: str = ""
+    chunk: str,
+    glossary: object,
+    prev_summary: str = "",
+    target_lang: str = "zh-TW",
 ) -> str:
+    tl = normalize_target_language(target_lang)
+    cfg = get_target_config(tl)
     gtxt = _glossary_to_prompt_string(glossary)
     return f"""
-    你是一位專業的翻譯專家，擅長將文本翻譯為流暢且優雅的繁體中文。
+    你是一位專業的翻譯專家，擅長將文本翻譯為{cfg["translate_goal"]}。
     
     請遵守以下規範：
     1. 參考術語表進行翻譯：{gtxt}
@@ -71,8 +80,7 @@ def build_translate_prompt(
     """
 
 
-def build_summary_prompt(chunk_translation: str) -> str:
-    return (
-        "請為以下譯文生成一段 100 字以內的簡短摘要，重點說明主要內容與脈絡：\n\n"
-        f"{chunk_translation}"
-    )
+def build_summary_prompt(chunk_translation: str, target_lang: str = "zh-TW") -> str:
+    tl = normalize_target_language(target_lang)
+    cfg = get_target_config(tl)
+    return cfg["summary_lead"] + f"{chunk_translation}"

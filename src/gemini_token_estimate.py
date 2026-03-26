@@ -19,6 +19,7 @@ from prompt_builders import (
     build_summary_prompt,
     build_translate_prompt,
 )
+from target_languages import get_target_config, normalize_target_language
 from text_splitter import split_text_with_overlap
 
 # 模型 ID 與顯示名稱（可依 Google 最新可用名稱調整）
@@ -52,12 +53,6 @@ _GLOSSARY_OUTPUT_SAMPLE = """```json
   ]
 }
 ```"""
-
-# 前文摘要佔位（模擬上一段摘要長度）
-_SUMMARY_PLACEHOLDER = (
-    "前文摘要占位：本段譯文重點為角色處境、情緒轉折與接下來的行動方向，"
-    "需與下一段銜接。"
-)
 
 # 摘要步驟的「譯文」輸入佔位：以當段原文長度代理譯文 token 量級（中日對譯長度常相近）
 def _translation_output_proxy(chunk: str) -> str:
@@ -109,9 +104,13 @@ def estimate_pipeline_tokens(
     chunk_size: int,
     overlap_size: int,
     api_key: str | None = None,
+    target_language: str = "zh-TW",
 ) -> PipelineTokenEstimate:
     if not source_text or not source_text.strip():
         raise ValueError("原文為空，無法估算。")
+
+    tl = normalize_target_language(target_language)
+    tcfg = get_target_config(tl)
 
     use_worker = bool(worker_base_url())
     model = None
@@ -139,7 +138,7 @@ def estimate_pipeline_tokens(
     num_chunks = len(chunks)
     glossary_proxy = _glossary_proxy_from_source(source_text)
 
-    glossary_prompt = build_extract_glossary_prompt(source_text)
+    glossary_prompt = build_extract_glossary_prompt(source_text, target_lang=tl)
     glossary_prompt_in = count_tokens_text(glossary_prompt)
     glossary_out_proxy = count_tokens_text(_GLOSSARY_OUTPUT_SAMPLE)
 
@@ -149,19 +148,17 @@ def estimate_pipeline_tokens(
     summary_out_proxy_total = 0
 
     for i, chunk in enumerate(chunks):
-        prev = "" if i == 0 else _SUMMARY_PLACEHOLDER
-        t_in = build_translate_prompt(chunk, glossary_proxy, prev)
+        prev = "" if i == 0 else tcfg["summary_placeholder_prev"]
+        t_in = build_translate_prompt(chunk, glossary_proxy, prev, target_lang=tl)
         translate_in_total += count_tokens_text(t_in)
 
         trans_proxy = _translation_output_proxy(chunk)
         translate_out_proxy_total += count_tokens_text(trans_proxy)
 
-        s_in = build_summary_prompt(trans_proxy)
+        s_in = build_summary_prompt(trans_proxy, target_lang=tl)
         summary_in_total += count_tokens_text(s_in)
 
-        summary_out_sample = (
-            "摘要占位：重點為情境推進與人物動機，承接上段脈絡並為下段鋪墊。"
-        )
+        summary_out_sample = tcfg["summary_out_sample"]
         summary_out_proxy_total += count_tokens_text(summary_out_sample)
 
     return PipelineTokenEstimate(

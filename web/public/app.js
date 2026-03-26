@@ -17,6 +17,47 @@
     "gemini-1.5-pro": "Gemini 1.5 Pro",
   };
 
+  const TARGET_LANGUAGE_OPTIONS = {
+    "zh-TW": "繁體中文",
+    ja: "日文",
+    en: "英文",
+    ko: "韓文",
+  };
+
+  const TARGET_PROMPTS = {
+    "zh-TW": {
+      glossaryHint: "請為每個術語提供建議的繁體中文譯名。",
+      translateGoal: "流暢且優雅的繁體中文",
+      summaryLead:
+        "請為以下譯文生成一段 100 字以內的簡短摘要，使用繁體中文，重點說明主要內容與脈絡：\n\n",
+    },
+    ja: {
+      glossaryHint:
+        "各用語について、文脈に合った自然な日本語の訳語を付けてください。",
+      translateGoal: "自然で読みやすい日本語",
+      summaryLead:
+        "以下の訳文を読み、日本語で内容と脈絡を押さえた短い要約をおおよそ 200 字以内で書いてください：\n\n",
+    },
+    en: {
+      glossaryHint:
+        "For each term, give a concise, natural English gloss or translation appropriate to the text.",
+      translateGoal: "fluent, natural English",
+      summaryLead:
+        "Read the following translation and write a brief summary in English (about 80–120 words) capturing the main points and context:\n\n",
+    },
+    ko: {
+      glossaryHint:
+        "각 용어에 대해 문맥에 맞는 자연스러운 한국어 표기나 번역을 제시하세요.",
+      translateGoal: "자연스럽고 읽기 쉬운 한국어",
+      summaryLead:
+        "다음 번역문을 바탕으로, 핵심 내용과 맥락을 담은 짧은 요약을 한국어로 약 200자 내외로 작성하세요：\n\n",
+    },
+  };
+
+  function normalizeTargetLang(code) {
+    return TARGET_PROMPTS[code] ? code : "zh-TW";
+  }
+
   const GEMINI_BASE =
     "https://generativelanguage.googleapis.com/v1beta/models/";
 
@@ -31,11 +72,13 @@
     return `${head}\n\n[… 文中省略 …]\n\n${mid}\n\n[… 文中省略 …]\n\n${tail}`;
   }
 
-  function buildExtractGlossaryPrompt(text) {
+  function buildExtractGlossaryPrompt(text, targetLang) {
+    const tl = normalizeTargetLang(targetLang);
+    const cfg = TARGET_PROMPTS[tl];
     const snippet = stratifiedSnippet(text, GLOSSARY_LIMIT);
     return `
     你是一位專業的術語提取專家。請從以下文本中提取出 20-30 個關鍵術語（包含專有名詞、技術術語、高頻關鍵字）。
-    請為每個術語提供建議的繁體中文譯名。
+    ${cfg.glossaryHint}
     
     輸出格式請嚴格遵守 JSON 格式：
     {
@@ -59,11 +102,13 @@
     }
   }
 
-  function buildTranslatePrompt(chunk, glossary, prevSummary) {
+  function buildTranslatePrompt(chunk, glossary, prevSummary, targetLang) {
+    const tl = normalizeTargetLang(targetLang);
+    const cfg = TARGET_PROMPTS[tl];
     const gtxt = glossaryToPromptText(glossary);
     const ps = prevSummary || "";
     return `
-    你是一位專業的翻譯專家，擅長將文本翻譯為流暢且優雅的繁體中文。
+    你是一位專業的翻譯專家，擅長將文本翻譯為${cfg.translateGoal}。
     
     請遵守以下規範：
     1. 參考術語表進行翻譯：${gtxt}
@@ -77,11 +122,10 @@
     `;
   }
 
-  function buildSummaryPrompt(chunkTranslation) {
-    return (
-      "請為以下譯文生成一段 100 字以內的簡短摘要，重點說明主要內容與脈絡：\n\n" +
-      chunkTranslation
-    );
+  function buildSummaryPrompt(chunkTranslation, targetLang) {
+    const tl = normalizeTargetLang(targetLang);
+    const cfg = TARGET_PROMPTS[tl];
+    return cfg.summaryLead + chunkTranslation;
   }
 
   function rfindAnyBreak(s) {
@@ -320,6 +364,18 @@
     }
   }
 
+  function fillTargetLangSelect() {
+    const sel = document.getElementById("targetLang");
+    if (!sel) return;
+    sel.innerHTML = "";
+    for (const [id, label] of Object.entries(TARGET_LANGUAGE_OPTIONS)) {
+      const o = document.createElement("option");
+      o.value = id;
+      o.textContent = label;
+      sel.appendChild(o);
+    }
+  }
+
   async function runPipeline() {
     const errEl = document.getElementById("error");
     const outEl = document.getElementById("output");
@@ -335,6 +391,7 @@
     }
 
     const modelId = document.getElementById("model").value;
+    const targetLang = document.getElementById("targetLang").value;
     const chunkSize = parseInt(document.getElementById("chunkSize").value, 10);
     const overlapSize = parseInt(
       document.getElementById("overlapSize").value,
@@ -380,14 +437,19 @@
         const translated = await generateWithRetry(
           apiKey,
           modelId,
-          buildTranslatePrompt(chunks[i], glossary, prevSummary),
+          buildTranslatePrompt(
+            chunks[i],
+            glossary,
+            prevSummary,
+            targetLang
+          ),
           5
         );
         translations.push(translated);
         prevSummary = await generateWithRetry(
           apiKey,
           modelId,
-          buildSummaryPrompt(translated),
+          buildSummaryPrompt(translated, targetLang),
           5
         );
       }
@@ -413,6 +475,7 @@
 
   function init() {
     fillModelSelect();
+    fillTargetLangSelect();
     const saved = loadKey();
     if (saved) document.getElementById("apiKey").value = saved;
 

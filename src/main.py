@@ -7,6 +7,11 @@ from text_splitter import split_text_with_overlap
 from translator import translate_chunk, generate_summary
 from docx_writer import save_translation_docx
 from translation_merge import join_translated_chunks
+from target_languages import (
+    DEFAULT_TARGET_LANGUAGE,
+    TARGET_LANGUAGE_OPTIONS,
+    normalize_target_language,
+)
 
 
 def _configure_stdio_utf8() -> None:
@@ -48,8 +53,17 @@ def main() -> int:
         default="gemini-1.5-flash",
         help="Gemini 模型名稱 (預設: gemini-1.5-flash)",
     )
+    parser.add_argument(
+        "--target-lang",
+        type=str,
+        default=DEFAULT_TARGET_LANGUAGE,
+        choices=list(TARGET_LANGUAGE_OPTIONS.keys()),
+        metavar="CODE",
+        help="譯文目標語言：zh-TW／ja／en／ko（預設: zh-TW）",
+    )
 
     args = parser.parse_args()
+    target_lang = normalize_target_language(args.target_lang)
 
     input_path = args.input
     output_path = args.output
@@ -73,7 +87,9 @@ def main() -> int:
     # 1. 提取術語表
     print("-" * 30)
     print("正在提取術語表...")
-    glossary = extract_glossary(full_text, model_name=args.model)
+    glossary = extract_glossary(
+        full_text, model_name=args.model, target_language=target_lang
+    )
     print("術語表提取完成。")
     if args.save_glossary:
         try:
@@ -102,12 +118,20 @@ def main() -> int:
         print(f"正在翻譯第 {i+1}/{len(chunks)} 段...")
         try:
             translated_text = translate_chunk(
-                chunk, glossary, prev_summary, model_name=args.model
+                chunk,
+                glossary,
+                prev_summary,
+                model_name=args.model,
+                target_language=target_lang,
             )
             full_translation.append(translated_text)
 
             # 更新摘要供下一段使用
-            prev_summary = generate_summary(translated_text, model_name=args.model)
+            prev_summary = generate_summary(
+                translated_text,
+                model_name=args.model,
+                target_language=target_lang,
+            )
         except Exception as e:
             print(f"翻譯第 {i+1} 段時發生錯誤: {e}")
             translation_stopped_early = True
